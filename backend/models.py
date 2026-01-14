@@ -1,5 +1,5 @@
+from sqlalchemy import String, Text, Date, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import String, Text, Date
 from typing import Optional
 from datetime import date
 
@@ -21,6 +21,7 @@ class Job(Base):
     summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
+
 class Skill(Base):
     __tablename__ = "skills"
 
@@ -29,3 +30,18 @@ class Skill(Base):
 
     category: Mapped[Optional[str]] = mapped_column(String(80), nullable=True, index=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class JobSkill(Base):
+    __tablename__ = "job_skills"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    job_id: Mapped[int] = mapped_column(ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False, index=True)
+    skill_id: Mapped[int] = mapped_column(ForeignKey("skills.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    how_used: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("job_id", "skill_id", name="uq_job_skills_job_id_skill_id"),
+    )
