@@ -70,3 +70,13 @@ def update_job(job_id: int, payload: JobUpdate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(job)
     return job
+
+@app.delete("/jobs/{job_id}", status_code=204)
+def delete_job(job_id: int, db: Session = Depends(get_db)):
+    job = db.get(Job, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    db.delete(job)
+    db.commit()
+    return None
