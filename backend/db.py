@@ -7,7 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 
 # Load .env explicitly from backend/
-load_dotenv(Path(__file__).parent / ".env")
+load_dotenv(Path(__file__).parent / ".env", override=False)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
