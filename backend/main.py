@@ -2,14 +2,15 @@ import os
 from pathlib import Path
 from typing import Optional
 
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy import or_, select, and_
 from sqlalchemy.orm import Session
 
-from db import get_db, test_db_connection
-from models import Job, Skill, JobSkill
-from schemas import (
+from backend.db import get_db, test_db_connection
+from backend.models import Job, Skill, JobSkill
+from backend.schemas import (
     JobCreate, JobRead, JobUpdate,
     SkillCreate, SkillRead,
     JobSkillUpsert, JobSkillRead,
@@ -20,17 +21,18 @@ from schemas import (
 # Load .env explicitly from this folder
 load_dotenv(Path(__file__).parent / ".env")
 
-app = FastAPI(title="Job Skill Tracker API")
-
-
-@app.on_event("startup")
-def startup_check():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """
     Fail fast if DB isn't reachable at startup
     """
     result = test_db_connection()
     if not result.get("ok"):
         raise RuntimeError(f"Database connection failed: {result.get('error')}")
+    
+    yield
+
+app = FastAPI(lifespan=lifespan, title="Job Skill Tracker API")
 
 
 @app.get("/health")

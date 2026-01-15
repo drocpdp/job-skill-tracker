@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 
-from models import Base
+from backend.models import Base
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
