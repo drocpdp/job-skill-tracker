@@ -134,6 +134,13 @@ def list_skills(q: Optional[str] = None, db: Session = Depends(get_db)):
     stmt = stmt.order_by(Skill.name.asc())
     return list(db.execute(stmt).scalars().all())
 
+@app.get("/skills/{skill_id}", response_model=SkillRead)
+def get_skill(skill_id: int, db: Session = Depends(get_db)):
+    skill = db.get(Skill, skill_id)
+    if not skill:
+        raise HTTPException(status_code=404, detail="Skill not found")
+    return skill    
+
 @app.get("/skills/jobs", response_model=list[SkillJobRead])
 def list_jobs_for_skill(
     skill: Optional[str] = None,
