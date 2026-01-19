@@ -7,7 +7,6 @@ from sqlalchemy import text
 from utils.strings import get_unique_s
 
 def test_create_skill_and_get_by_id(client):
-    # TDD. This will fail for now. I need to develop functionality.
     t_skill = "skill-" + get_unique_s()
     # Create
     r = client.post("/skills", json={"name": t_skill})
