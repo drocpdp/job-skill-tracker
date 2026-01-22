@@ -4,10 +4,10 @@ import json
 
 from sqlalchemy import text
 
-from utils.strings import get_unique_s
+from utils.strings import get_unique_s, create_field
 from utils.dates import make_date
 
-from utils.api import create_new_job, post_create_job, create_complete_test_job
+from utils.api import create_new_job, post_create_job, create_complete_test_job, create_complete_test_skill
 
 
 def test_add_two_skills_to_job(client):
@@ -16,13 +16,10 @@ def test_add_two_skills_to_job(client):
     job_id = job_obj["id"]
 
     # Create skill - 1
-
-    t_skill1 = "skill1-" + get_unique_s()
-    r = client.post("/skills", json={"name": t_skill1})
-    assert r.status_code == 201
-    skill1 = r.json()
+    skill1 = create_complete_test_skill(client)
     skill1_id = skill1["id"]
-    t_used_in1 = "used-in-1-" + get_unique_s()
+    t_used_in1 = create_field("used-in-1")
+    t_skill1 = skill1["name"]
 
     package = {
         "skill_id": skill1_id,
@@ -36,13 +33,10 @@ def test_add_two_skills_to_job(client):
 
 
     # Create skill - 2
-
-    t_skill2 = "skill2-" + get_unique_s()
-    r = client.post("/skills", json={"name": t_skill2})
-    assert r.status_code == 201
-    skill2 = r.json()
+    skill2 = create_complete_test_skill(client)
     skill2_id = skill2["id"]
-    t_used_in2 = "used-in-2-" + get_unique_s()
+    t_used_in2 = create_field("used-in-2")
+    t_skill2 = skill2["name"]
 
     package = {
         "skill_id": skill2_id,
