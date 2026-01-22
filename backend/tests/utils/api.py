@@ -5,7 +5,14 @@ import json
 from utils.strings import get_unique_s
 from utils.dates import make_date
 
-def create_job_json(t_company=None, t_title=None, t_location=None, t_start_date=None, t_end_date=None, t_summary=None, t_notes=None ):
+def create_job_json(t_company=None, 
+    t_title=None, 
+    t_location=None, 
+    t_start_date=None, 
+    t_end_date=None, 
+    t_summary=None, 
+    t_notes=None 
+    ):
     """
     Create json payload of create job.
     """
