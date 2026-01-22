@@ -34,7 +34,7 @@ def test_add_two_skills_to_job(client):
     package = {
         "skill_id": skill1_id,
         "how_used": t_used_in1,
-        }
+    }
 
     # Add skill to job
 
