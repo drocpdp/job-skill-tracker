@@ -5,3 +5,6 @@ def get_unique_epoch_s():
 
 def get_unique_s():
     return get_unique_epoch_s()
+
+def create_field(field):
+    return f"field-{get_unique_s()}"
