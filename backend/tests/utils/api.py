@@ -19,6 +19,7 @@ def post_create_job(client, **kwargs):
 
     return client.post("/jobs", json=payload)
 
+
 def create_new_job(client, **kwargs):
     """
     Create new job, and validate the RESPONSE object fields == payload fields
@@ -58,3 +59,43 @@ def create_complete_test_job(client):
         "t_notes": create_field("notes"),
     }
     return create_new_job(client, **payload)
+
+
+def post_create_skill(client, **kwargs):
+    payload = {
+        "name": kwargs.get("t_name"),
+        "category": kwargs.get("t_category"),
+        "notes": kwargs.get("t_notes"),
+    }
+    payload = {k: v for k, v in payload.items() if v is not None}
+
+    return client.post("/skills", json=payload)
+
+
+def create_new_skill(client, **kwargs):
+    
+    # create
+    r = post_create_skill(client, **kwargs)
+
+    assert r.status_code == 201
+    skill = r.json()
+    assert skill["id"] > 0
+    assert skill["name"] == kwargs.get("t_name")
+
+    if "t_category" in kwargs:
+        assert skill["category"] == kwargs.get("t_category")
+    if "t_notes" in kwargs:
+        assert skill["notes"] == kwargs.get("t_notes")
+
+    return skill    
+
+
+
+def create_complete_test_skill(client):
+    payload = {
+        "t_name": create_field("name"),
+        "t_category": create_field("category"),
+        "t_notes": create_field("notes"),
+    }
+    
+    return create_new_skill(client, **payload)
