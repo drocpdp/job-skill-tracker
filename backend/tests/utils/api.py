@@ -90,12 +90,11 @@ def create_new_skill(client, **kwargs):
     return skill    
 
 
-
 def create_complete_test_skill(client):
     payload = {
         "t_name": create_field("name"),
         "t_category": create_field("category"),
         "t_notes": create_field("notes"),
     }
-    
+
     return create_new_skill(client, **payload)
