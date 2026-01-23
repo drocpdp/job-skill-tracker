@@ -173,28 +173,6 @@ def list_jobs_for_skill(
 
     return [{"job": job, "how_used": job_skill.how_used} for job_skill, job in rows]
 
-@app.get("/skills/by-name/{name}/jobs", response_model=list[SkillJobRead])
-def list_jobs_for_skill_by_name(name: str, db: Session = Depends(get_db)):
-    skill_name = name.strip()
-    if not skill_name:
-        raise HTTPException(status_code=422, detail="Skill name cannot be empty")
-    
-    skill = db.execute(
-        select(Skill).where(Skill.name.ilike(skill_name))
-    ).scalar_one_or_none()
-
-    if not skill:
-        raise HTTPException(status_code=404, detail="Skill not found")
-    
-    rows = db.execute(
-        select(JobSkill, Job)
-        .join(Job, Job.id == JobSkill.job_id)
-        .where(JobSkill.skill_id == skill.id)
-        .order_by(Job.id.desc())
-    ).all()
-
-    return [{"job": job, "how_used": job_skill.how_used} for job_skill, job in rows]
-
 
 @app.get("/jobs", response_model=list[JobRead])
 def list_jobs(
