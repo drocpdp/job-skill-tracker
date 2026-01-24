@@ -38,7 +38,7 @@ def test_create_skill_get_by_name(client):
     skill_id = skill["id"]
     skill_name = skill["name"]
 
-    # Get by id
+    # Get by name
     r_get = client.get(f"/skills/", params={"q":skill_name})
     assert r_get.status_code == 200
     skill_get = r_get.json()
@@ -97,3 +97,31 @@ def test_get_skill_using_non_existent_name_expect_empty_set(client):
     skills_by_names = {skill["name"]: skill for skill in skill_get}
     
     assert len(skills_by_names) == 0
+
+
+def test_get_skills_with_similar_name_string_expect_set_of_results(client):
+    skills = {}
+
+    num_tests = 4
+
+    common_string = "na"
+
+    for _ in range(num_tests):
+        skill = create_complete_test_skill(client)
+        skill_id = skill["id"]
+        skill_name = skill["name"]
+
+        skills[skill_id] = [skill_name, skill]
+
+    # Get by common name
+    r_get = client.get(f"/skills/", params={"q":common_string})
+    assert r_get.status_code == 200
+
+    skill_get = r_get.json()
+
+    assert len(skill_get) == num_tests
+
+    skills_by_names = {skill["name"]: skill for skill in skill_get}
+
+    for name in skills_by_names:
+        assert common_string in name
