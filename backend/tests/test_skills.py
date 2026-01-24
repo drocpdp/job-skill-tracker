@@ -125,3 +125,24 @@ def test_get_skills_with_similar_name_string_expect_set_of_results(client):
 
     for name in skills_by_names:
         assert common_string in name
+
+
+def test_get_skills_expect_set_of_results_to_match_number_of_entries(client):
+    skills = {}
+
+    num_tests = 4
+
+    for _ in range(num_tests):
+        skill = create_complete_test_skill(client)
+        skill_id = skill["id"]
+        skill_name = skill["name"]
+
+        skills[skill_id] = [skill_name, skill]
+
+    # Get by common name
+    r_get = client.get(f"/skills/")
+    assert r_get.status_code == 200
+
+    skill_get = r_get.json()
+
+    assert len(skill_get) == num_tests
