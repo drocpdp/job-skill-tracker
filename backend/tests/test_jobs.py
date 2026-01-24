@@ -15,6 +15,38 @@ def test_create_new_job(client):
     create_new_job(client, t_company=t_company, t_title=t_title)
 
 
+def test_create_new_job_with_duplicate_company_name_and_title(client):
+    """ 
+    For now, creates separate jobs
+    """
+    t_company = create_field("company")
+    t_title = create_field("title")
+
+    #DUPLICATE
+    job = create_new_job(client, t_company=t_company, t_title=t_title)
+    job2 = create_new_job(client, t_company=t_company, t_title=t_title)
+
+    job_id = job["id"]
+    job_company = job["company"]
+
+    # Get by id
+    r2 = client.get(f"/jobs/{job_id}")
+    assert r2.status_code == 200
+    job2 = r2.json()
+    assert job2["id"] == job_id
+    assert job2["company"] == job_company
+
+    job_id = job2["id"]
+    job_company = job2["company"]
+
+    # Get by id (duplicate)
+    r2 = client.get(f"/jobs/{job_id}")
+    assert r2.status_code == 200
+    job2 = r2.json()
+    assert job2["id"] == job_id
+    assert job2["company"] == job_company    
+    
+
 def test_create_job_and_get_by_id(client):
     t_company = create_field("company")
     t_title = create_field("title")
