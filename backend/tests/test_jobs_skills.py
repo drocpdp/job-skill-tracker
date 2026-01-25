@@ -463,3 +463,10 @@ def test_delete_skill_in_use_fails(client):
     assert skills_by_job_id[job_id][0]["skill"]["id"] == skill_id
     assert skills_by_job_id[job_id][0]["skill"]["name"] == skill_name        
 
+
+def test_change_name_of_added_skill(client):
+    # Create skill
+    skill = create_complete_test_skill(client)
+    skill_id = skill["id"]
+    skill_name = skill["name"]
+    skill_notes = skill["notes"]
