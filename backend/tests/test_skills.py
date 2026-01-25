@@ -146,3 +146,61 @@ def test_get_skills_expect_set_of_results_to_match_number_of_entries(client):
     skill_get = r_get.json()
 
     assert len(skill_get) == num_tests
+
+
+def test_change_name_of_added_skill(client):
+    # Create skill
+    skill = create_complete_test_skill(client)
+    skill_id = skill["id"]
+    skill_name = skill["name"]
+    skill_notes = skill["notes"]
+
+    # Get by id
+    r_get = client.get(f"/skills/{skill_id}")
+    assert r_get.status_code == 200
+    skill_get = r_get.json()
+    assert skill_get["id"] == skill_id
+    assert skill_get["name"] == skill_name
+    assert skill_get["notes"] == skill_notes
+
+    # Change name
+    payload = {"name": create_field("UPDATE-NAME")}
+    r = client.patch(f"/skills/{skill_id}", json=payload)
+    r_json = r.json()
+    assert r_json["name"] == payload["name"]
+
+    r_get = client.get(f"/skills/{skill_id}")
+    assert r_get.status_code == 200
+    skill_get = r_get.json()
+    assert skill_get["id"] == skill_id
+    assert skill_get["name"] == payload["name"]
+    assert skill_get["notes"] == skill_notes    
+
+
+def test_change_notes_of_added_skill(client):
+    # Create skill
+    skill = create_complete_test_skill(client)
+    skill_id = skill["id"]
+    skill_name = skill["name"]
+    skill_notes = skill["notes"]
+
+    # Get by id
+    r_get = client.get(f"/skills/{skill_id}")
+    assert r_get.status_code == 200
+    skill_get = r_get.json()
+    assert skill_get["id"] == skill_id
+    assert skill_get["name"] == skill_name
+    assert skill_get["notes"] == skill_notes
+
+    # Change notes
+    payload = {"notes": create_field("UPDATE-NAME")}
+    r = client.patch(f"/skills/{skill_id}", json=payload)
+    r_json = r.json()
+    assert r_json["notes"] == payload["notes"]    
+
+    r_get = client.get(f"/skills/{skill_id}")
+    assert r_get.status_code == 200
+    skill_get = r_get.json()
+    assert skill_get["id"] == skill_id
+    assert skill_get["name"] == skill_name
+    assert skill_get["notes"] == payload["notes"]

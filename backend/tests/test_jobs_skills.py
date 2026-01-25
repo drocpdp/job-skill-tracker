@@ -464,9 +464,208 @@ def test_delete_skill_in_use_fails(client):
     assert skills_by_job_id[job_id][0]["skill"]["name"] == skill_name        
 
 
-def test_change_name_of_added_skill(client):
+def test_add_skills_to_job_change_skill_name_confirm_changes_cascade(client):
+    # Create job 1
+    job_obj1 = create_complete_test_job(client)
+    job_id1 = job_obj1["id"] 
+
+    # Create job 2
+    job_obj2 = create_complete_test_job(client)
+    job_id2 = job_obj2["id"]    
+
     # Create skill
     skill = create_complete_test_skill(client)
     skill_id = skill["id"]
     skill_name = skill["name"]
     skill_notes = skill["notes"]
+
+    # Link skill to job 1
+    r = client.post(f"/jobs/{job_id1}/skills", json={"skill_id": skill_id})
+    assert r.status_code == 201
+
+    # Link skill to job 2
+    r = client.post(f"/jobs/{job_id2}/skills", json={"skill_id": skill_id})
+    assert r.status_code == 201    
+
+    # Change name of skill
+    new_name = create_field("NEW_NAME")
+    r = client.patch(f"/skills/{skill_id}", json={"name": new_name})
+    assert r.status_code == 200
+    skill_get = r.json()
+    assert skill_get["id"] == skill_id
+    assert skill_get["name"] == new_name
+    assert skill_get["notes"] == skill_notes        
+    
+    # Get by id
+    r_get = client.get(f"/skills/{skill_id}")
+    assert r_get.status_code == 200
+    skill_get = r_get.json()
+    assert skill_get["id"] == skill_id
+    assert skill_get["name"] == new_name
+    assert skill_get["notes"] == skill_notes
+
+    # validation data object (re-form data)
+    skills_by_job_id = {}
+
+    # Job 1 skills link GET
+    r = client.get(f"/jobs/{job_id1}/skills")
+    r_json = r.json()
+    skills_by_job_id[job_id1] = r_json
+    assert r.status_code == 200
+
+    # Job 2 skills link GET
+    r = client.get(f"/jobs/{job_id2}/skills")
+    r_json = r.json()
+    skills_by_job_id[job_id2] = r_json
+    assert r.status_code == 200
+    
+    assert job_id1 in skills_by_job_id
+    assert job_id2 in skills_by_job_id
+    
+    # Validate skill association Job 1
+    assert skills_by_job_id[job_id1][0]["skill"]["id"] == skill_id
+    assert skills_by_job_id[job_id1][0]["skill"]["name"] == new_name       
+    
+    # Validate skill association Job 2
+    assert skills_by_job_id[job_id2][0]["skill"]["id"] == skill_id
+    assert skills_by_job_id[job_id2][0]["skill"]["name"] == new_name       
+
+
+def test_add_skills_to_job_change_skill_notes_confirm_changes_cascade(client):
+    # Create job 1
+    job_obj1 = create_complete_test_job(client)
+    job_id1 = job_obj1["id"] 
+
+    # Create job 2
+    job_obj2 = create_complete_test_job(client)
+    job_id2 = job_obj2["id"]    
+
+    # Create skill
+    skill = create_complete_test_skill(client)
+    skill_id = skill["id"]
+    skill_name = skill["name"]
+    skill_notes = skill["notes"]
+
+    # Link skill to job 1
+    r = client.post(f"/jobs/{job_id1}/skills", json={"skill_id": skill_id})
+    assert r.status_code == 201
+
+    # Link skill to job 2
+    r = client.post(f"/jobs/{job_id2}/skills", json={"skill_id": skill_id})
+    assert r.status_code == 201    
+
+    # Change notes of skill
+    new_notes = create_field("NEW_NOTES")
+    r = client.patch(f"/skills/{skill_id}", json={"notes": new_notes})
+    assert r.status_code == 200
+    skill_get = r.json()
+    assert skill_get["id"] == skill_id
+    assert skill_get["name"] == skill_name
+    assert skill_get["notes"] == new_notes    
+    
+    # Get by id
+    r_get = client.get(f"/skills/{skill_id}")
+    assert r_get.status_code == 200
+    skill_get = r_get.json()
+    assert skill_get["id"] == skill_id
+    assert skill_get["name"] == skill_name
+    assert skill_get["notes"] == new_notes
+
+    # validation data object (re-form data)
+    skills_by_job_id = {}
+
+    # Job 1 skills link GET
+    r = client.get(f"/jobs/{job_id1}/skills")
+    r_json = r.json()
+    skills_by_job_id[job_id1] = r_json
+    assert r.status_code == 200
+
+    # Job 2 skills link GET
+    r = client.get(f"/jobs/{job_id2}/skills")
+    r_json = r.json()
+    skills_by_job_id[job_id2] = r_json
+    assert r.status_code == 200
+    
+    assert job_id1 in skills_by_job_id
+    assert job_id2 in skills_by_job_id
+    
+    # Validate skill association Job 1
+    assert skills_by_job_id[job_id1][0]["skill"]["id"] == skill_id
+    assert skills_by_job_id[job_id1][0]["skill"]["name"] == skill_name
+    assert skills_by_job_id[job_id1][0]["skill"]["notes"] == new_notes
+    
+    # Validate skill association Job 2
+    assert skills_by_job_id[job_id2][0]["skill"]["id"] == skill_id
+    assert skills_by_job_id[job_id2][0]["skill"]["name"] == skill_name  
+    assert skills_by_job_id[job_id2][0]["skill"]["notes"] == new_notes             
+
+
+def test_add_skills_to_job_change_skill_name_and_notes_confirm_changes_cascade(client):
+    # Create job 1
+    job_obj1 = create_complete_test_job(client)
+    job_id1 = job_obj1["id"] 
+
+    # Create job 2
+    job_obj2 = create_complete_test_job(client)
+    job_id2 = job_obj2["id"]    
+
+    # Create skill
+    skill = create_complete_test_skill(client)
+    skill_id = skill["id"]
+    skill_name = skill["name"]
+    skill_notes = skill["notes"]
+
+    # Link skill to job 1
+    r = client.post(f"/jobs/{job_id1}/skills", json={"skill_id": skill_id})
+    assert r.status_code == 201
+
+    # Link skill to job 2
+    r = client.post(f"/jobs/{job_id2}/skills", json={"skill_id": skill_id})
+    assert r.status_code == 201    
+
+    # Change name of skill
+    new_name = create_field("NEW_NAME")
+    new_notes = create_field("NEW_NOTES")
+    r = client.patch(f"/skills/{skill_id}", json={"name": new_name, "notes": new_notes})
+    assert r.status_code == 200
+    r_json = r.json()
+    assert r_json["id"] == skill_id
+    assert r_json["name"] == new_name
+    assert r_json["notes"] == new_notes
+    
+    # Get by id
+    r_get = client.get(f"/skills/{skill_id}")
+    assert r_get.status_code == 200
+    skill_get = r_get.json()
+    assert skill_get["id"] == skill_id
+    assert skill_get["name"] == new_name
+    assert skill_get["notes"] == new_notes
+
+    # validation data object (re-form data)
+    skills_by_job_id = {}
+
+    # Job 1 skills link GET
+    r = client.get(f"/jobs/{job_id1}/skills")
+    r_json = r.json()
+    skills_by_job_id[job_id1] = r_json
+    assert r.status_code == 200
+
+    # Job 2 skills link GET
+    r = client.get(f"/jobs/{job_id2}/skills")
+    r_json = r.json()
+    skills_by_job_id[job_id2] = r_json
+    assert r.status_code == 200
+    
+    assert job_id1 in skills_by_job_id
+    assert job_id2 in skills_by_job_id
+    
+    # Validate skill association from Job 1
+    assert skills_by_job_id[job_id1][0]["skill"]["id"] == skill_id
+    assert skills_by_job_id[job_id1][0]["skill"]["name"] == new_name       
+    assert skills_by_job_id[job_id1][0]["skill"]["notes"] == new_notes         
+    
+    # Validate skill association from Job 2
+    assert skills_by_job_id[job_id2][0]["skill"]["id"] == skill_id
+    assert skills_by_job_id[job_id2][0]["skill"]["name"] == new_name  
+    assert skills_by_job_id[job_id2][0]["skill"]["notes"] == new_notes       
+
