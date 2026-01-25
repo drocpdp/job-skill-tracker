@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy import or_, select, and_
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from backend.db import get_db, test_db_connection
 from backend.models import Job, Skill, JobSkill
@@ -248,6 +249,25 @@ def delete_job(job_id: int, db: Session = Depends(get_db)):
     
     db.delete(job)
     db.commit()
+    return None
+
+
+@app.delete("/skills/{skill_id}", status_code=204)
+def delete_skill(skill_id: int, db: Session = Depends(get_db)):
+    skill = db.get(Skill, skill_id)
+    if not skill:
+        raise HTTPException(status_code=404, detail="Skill not found")
+    
+    try:
+        db.delete(skill)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="Skill is in use by one or more jobs",
+        )
+
     return None
 
 @app.delete("/jobs/{job_id}/skills/{skill_id}", status_code=204)

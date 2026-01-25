@@ -38,7 +38,7 @@ class JobSkill(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     job_id: Mapped[int] = mapped_column(ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False, index=True)
-    skill_id: Mapped[int] = mapped_column(ForeignKey("skills.id", ondelete="CASCADE"), nullable=False, index=True)
+    skill_id: Mapped[int] = mapped_column(ForeignKey("skills.id", ondelete="RESTRICT"), nullable=False, index=True)
 
     how_used: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 

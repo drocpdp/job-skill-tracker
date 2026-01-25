@@ -2,8 +2,8 @@ import os
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, event
+from sqlalchemy.orm import Session
 
 from backend.db import get_db
 from backend import main
@@ -18,19 +18,21 @@ def test_engine():
 @pytest.fixture()
 def db_session(test_engine):
     """
-    Create a DB session wrapped in a transaction, rolled back after each test.
+    Create a DB session wrapped in an outer transaction.
+    Each test runs inside a SAVEPOINT so app-level rollbacks
+    don't break the test harness teardown.
     """
     connection = test_engine.connect()
-    transaction = connection.begin()
+    outer_tx = connection.begin()
 
-    TestingSessionLocal = sessionmaker(bind=connection, autoflush=False, autocommit=False)
-    session = TestingSessionLocal()
+    session = Session(bind=connection, join_transaction_mode="create_savepoint")
 
     try:
         yield session
     finally:
         session.close()
-        transaction.rollback()
+        if outer_tx.is_active:
+            outer_tx.rollback()
         connection.close()
     
 @pytest.fixture()

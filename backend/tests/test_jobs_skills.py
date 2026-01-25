@@ -440,3 +440,27 @@ def test_add_one_skill_to_two_different_jobs_delete_one_skill_to_job_relation_va
     # Validate skill association NOT deleted from Job 2
     assert skills_by_job_id[job_id2][0]["skill"]["id"] == skill_id
     assert skills_by_job_id[job_id2][0]["skill"]["name"] == skill_name        
+
+
+def test_delete_skill_in_use_fails(client):
+    # Create job
+    job = create_complete_test_job(client)
+    job_id = job["id"]
+
+    # Create skill
+    skill = create_complete_test_skill(client)
+    skill_id = skill["id"]
+
+    # Attach skill to job
+    r = client.post(
+        f"/jobs/{job_id}/skills",
+        json={"skill_id": skill_id, "how_used": "Primary backend DB"},
+    )
+    assert r.status_code == 201
+
+    # Attempt to delete skill
+    r = client.delete(f"/skills/{skill_id}")
+
+    # This is the key assertion
+    assert r.status_code == 409
+    assert "in use" in r.json()["detail"].lower()
