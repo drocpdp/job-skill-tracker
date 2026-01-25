@@ -9,6 +9,7 @@ from utils.dates import make_date
 
 from utils.api import create_new_job, post_create_job, create_complete_test_job
 
+
 def test_create_new_job(client):
     t_company = create_field("company")
     t_title = create_field("title")
@@ -23,7 +24,6 @@ def test_create_new_job(client):
     job2 = r2.json()
     assert job2["id"] == job_id
     assert job2["company"] == job_company    
-
 
 
 def test_create_new_job_with_duplicate_company_name_and_title(client):
