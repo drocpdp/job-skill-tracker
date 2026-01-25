@@ -12,7 +12,18 @@ from utils.api import create_new_job, post_create_job, create_complete_test_job
 def test_create_new_job(client):
     t_company = create_field("company")
     t_title = create_field("title")
-    create_new_job(client, t_company=t_company, t_title=t_title)
+    job = create_new_job(client, t_company=t_company, t_title=t_title)
+
+    job_id = job["id"]
+    job_company = job["company"]
+
+    #validate
+    r2 = client.get(f"/jobs/{job_id}")
+    assert r2.status_code == 200
+    job2 = r2.json()
+    assert job2["id"] == job_id
+    assert job2["company"] == job_company    
+
 
 
 def test_create_new_job_with_duplicate_company_name_and_title(client):
@@ -74,9 +85,101 @@ def test_create_job_validate_all_fields_of_return_object(client):
         "t_notes": create_field("notes"),
     }
 
-    create_new_job(
+    job = create_new_job(
         client, **payload
     )
+
+    job_id = job["id"]
+
+    # Get by id
+    r2 = client.get(f"/jobs/{job_id}")
+    assert r2.status_code == 200
+    job2 = r2.json()
+    # payload == t_*, response == *
+    for k in payload:
+        resp_k = k[2:]
+        assert job2[resp_k] == payload[k]
+
+
+def test_create_job_validate_all_fields_of_return_object_missing_location(client):
+    payload = {
+        "t_company": create_field("company"),
+        "t_title": create_field("title"),
+        #"t_location": create_field("location"),
+        "t_start_date": make_date(year=2022, month=5, day=23),
+        "t_end_date": make_date(year=2022, month=6, day=25),
+        "t_summary": create_field("summary"),
+        "t_notes": create_field("notes"),
+    }
+
+    job = create_new_job(
+        client, **payload
+    )
+
+    job_id = job["id"]
+
+    # Get by id
+    r2 = client.get(f"/jobs/{job_id}")
+    assert r2.status_code == 200
+    job2 = r2.json()
+    # payload == t_*, response == *
+    for k in payload:
+        resp_k = k[2:]
+        assert job2[resp_k] == payload[k]        
+
+
+def test_create_job_validate_all_fields_of_return_object_missing_summary(client):
+    payload = {
+        "t_company": create_field("company"),
+        "t_title": create_field("title"),
+        "t_location": create_field("location"),
+        "t_start_date": make_date(year=2022, month=5, day=23),
+        "t_end_date": make_date(year=2022, month=6, day=25),
+        #"t_summary": create_field("summary"),
+        "t_notes": create_field("notes"),
+    }
+
+    job = create_new_job(
+        client, **payload
+    )
+
+    job_id = job["id"]
+
+    # Get by id
+    r2 = client.get(f"/jobs/{job_id}")
+    assert r2.status_code == 200
+    job2 = r2.json()
+    # payload == t_*, response == *
+    for k in payload:
+        resp_k = k[2:]
+        assert job2[resp_k] == payload[k]               
+
+
+def test_create_job_validate_all_fields_of_return_object_missing_notes(client):
+    payload = {
+        "t_company": create_field("company"),
+        "t_title": create_field("title"),
+        "t_location": create_field("location"),
+        "t_start_date": make_date(year=2022, month=5, day=23),
+        "t_end_date": make_date(year=2022, month=6, day=25),
+        "t_summary": create_field("summary"),
+        #"t_notes": create_field("notes"),
+    }
+
+    job = create_new_job(
+        client, **payload
+    )
+
+    job_id = job["id"]
+
+    # Get by id
+    r2 = client.get(f"/jobs/{job_id}")
+    assert r2.status_code == 200
+    job2 = r2.json()
+    # payload == t_*, response == *
+    for k in payload:
+        resp_k = k[2:]
+        assert job2[resp_k] == payload[k]               
 
 
 def test_create_job_missing_title(client):
