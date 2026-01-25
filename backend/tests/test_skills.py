@@ -5,7 +5,7 @@ import json
 from sqlalchemy import text
 
 from utils.strings import get_unique_s, create_field
-from utils.api import create_complete_test_skill, post_create_skill
+from utils.api import create_complete_test_skill, post_create_skill, create_complete_test_job
 
 def test_create_skill_and_get_by_id(client):
     skill = create_complete_test_skill(client)
@@ -195,6 +195,7 @@ def test_change_notes_of_added_skill(client):
     # Change notes
     payload = {"notes": create_field("UPDATE-NAME")}
     r = client.patch(f"/skills/{skill_id}", json=payload)
+    assert r.status_code == 200
     r_json = r.json()
     assert r_json["notes"] == payload["notes"]    
 
@@ -204,3 +205,65 @@ def test_change_notes_of_added_skill(client):
     assert skill_get["id"] == skill_id
     assert skill_get["name"] == skill_name
     assert skill_get["notes"] == payload["notes"]
+
+
+def test_change_notes_of_added_skill_to_duplicate_name_skill(client):
+    # Create skill
+    skill = create_complete_test_skill(client)
+    skill_id = skill["id"]
+    skill_name = skill["name"]
+    skill_notes = skill["notes"]
+
+    # Get by id
+    r_get = client.get(f"/skills/{skill_id}")
+    assert r_get.status_code == 200
+    skill_get = r_get.json()
+    assert skill_get["id"] == skill_id
+    assert skill_get["name"] == skill_name
+    assert skill_get["notes"] == skill_notes
+
+    # Change name
+    new_notes = create_field("NEW-NOTES")
+    payload = {"name": skill_name, "notes": new_notes}
+    r = client.patch(f"/skills/{skill_id}", json=payload)
+    assert r.status_code == 200
+    r_json = r.json()
+    assert r_json["name"] == payload["name"]
+    assert r_json["notes"] == payload["notes"]
+
+    r_get = client.get(f"/skills/{skill_id}")
+    assert r_get.status_code == 200
+    skill_get = r_get.json()
+    assert skill_get["id"] == skill_id
+    assert skill_get["name"] == payload["name"]
+    assert skill_get["notes"] == payload["notes"]
+
+
+def test_delete_skill_not_in_use(client):
+    # Create job
+    job = create_complete_test_job(client)
+    job_id = job["id"]
+
+    # Create skill
+    skill = create_complete_test_skill(client)
+    skill_id = skill["id"]
+    skill_name = skill["name"]
+    skill_notes = skill["notes"]
+
+    # Get by id
+    r_get = client.get(f"/skills/{skill_id}")
+    assert r_get.status_code == 200
+    skill_get = r_get.json()
+    assert skill_get["id"] == skill_id
+    assert skill_get["name"] == skill_name
+    assert skill_get["notes"] == skill_notes
+
+    # Attempt to delete skill
+    r = client.delete(f"/skills/{skill_id}")
+
+    assert r.status_code == 204
+
+    r_get = client.get(f"/skills/{skill_id}")
+    assert r_get.status_code == 404
+    assert r_get.json()["detail"] == "Skill not found"
+    
