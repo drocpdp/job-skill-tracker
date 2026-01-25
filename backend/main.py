@@ -258,7 +258,7 @@ def detach_skill_from_job(job_id: int, skill_id: int, db: Session = Depends(get_
 
     if not assoc:
         raise HTTPException(status_code=404, detail="Job-skill link not found")
-    
+
     db.delete(assoc)
     db.commit()
     return None

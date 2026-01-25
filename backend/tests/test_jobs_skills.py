@@ -343,3 +343,100 @@ def test_attach_duplicate_skill_to_job(client):
     assert by_id[skill1_id]["how_used"] == t_used_in1
     #assert by_id[skill2_id]["how_used"] == t_used_in2    
 
+
+def test_add_one_skill_to_two_different_jobs_validate_added_to_both_jobs(client):
+    # Create job 1
+    job_obj1 = create_complete_test_job(client)
+    job_id1 = job_obj1["id"] 
+
+    # Create job 2
+    job_obj2 = create_complete_test_job(client)
+    job_id2 = job_obj2["id"]    
+
+    # Create skill
+    skill = create_complete_test_skill(client)
+    skill_id = skill["id"]
+    skill_name = skill["name"]
+
+    # Link skill to job 1
+    r = client.post(f"/jobs/{job_id1}/skills", json={"skill_id": skill_id})
+    assert r.status_code == 201
+
+    # Link skill to job 2
+    r = client.post(f"/jobs/{job_id2}/skills", json={"skill_id": skill_id})
+    assert r.status_code == 201
+
+    # validation data object (re-form data)
+    skills_by_job_id = {}
+
+    # Job 1 added to validation object
+    r = client.get(f"/jobs/{job_id1}/skills")
+    r_json = r.json()
+    skills_by_job_id[job_id1] = r_json
+    assert r.status_code == 200
+
+    # Job 2 added to validation object
+    r = client.get(f"/jobs/{job_id2}/skills")
+    r_json = r.json()
+    skills_by_job_id[job_id2] = r_json
+    assert r.status_code == 200
+
+    # Validate skill added to Job 1
+    assert skills_by_job_id[job_id1][0]["skill"]["id"] == skill_id
+    assert skills_by_job_id[job_id1][0]["skill"]["name"] == skill_name
+
+    # Validate skill added to Job 2
+    assert skills_by_job_id[job_id2][0]["skill"]["id"] == skill_id
+    assert skills_by_job_id[job_id2][0]["skill"]["name"] == skill_name    
+
+
+def test_add_one_skill_to_two_different_jobs_delete_one_skill_to_job_relation_validate_other_relation_unaffected(client):
+    # Create job 1
+    job_obj1 = create_complete_test_job(client)
+    job_id1 = job_obj1["id"] 
+
+    # Create job 2
+    job_obj2 = create_complete_test_job(client)
+    job_id2 = job_obj2["id"]    
+
+    # Create skill
+    skill = create_complete_test_skill(client)
+    skill_id = skill["id"]
+    skill_name = skill["name"]
+
+    # Link skill to job 1
+    r = client.post(f"/jobs/{job_id1}/skills", json={"skill_id": skill_id})
+    assert r.status_code == 201
+
+    # Link skill to job 2
+    r = client.post(f"/jobs/{job_id2}/skills", json={"skill_id": skill_id})
+    assert r.status_code == 201    
+
+    # Delete link skill to job 1
+    r = client.delete(f"/jobs/{job_id1}/skills/{skill_id}")
+    assert r.status_code == 204, r.text
+
+    # validation data object (re-form data)
+    skills_by_job_id = {}
+
+    # Job 1 skills link GET
+    r = client.get(f"/jobs/{job_id1}/skills")
+    r_json = r.json()
+    skills_by_job_id[job_id1] = r_json
+    assert r.status_code == 200
+
+    # Job 2 skills link GET
+    r = client.get(f"/jobs/{job_id2}/skills")
+    r_json = r.json()
+    skills_by_job_id[job_id2] = r_json
+    assert r.status_code == 200
+    
+    assert job_id1 in skills_by_job_id
+    assert job_id2 in skills_by_job_id
+    
+    # Validate skill association deleted from Job 1
+    assert skills_by_job_id[job_id1] == []
+    
+    # Validate skill association NOT deleted from Job 2
+    assert skills_by_job_id[job_id2][0]["skill"]["id"] == skill_id
+    assert skills_by_job_id[job_id2][0]["skill"]["name"] == skill_name        
