@@ -319,29 +319,9 @@ def test_attach_duplicate_skill_to_job(client):
     # Add skill to job
 
     r = client.post(f"/jobs/{job_id}/skills", json=package)
-    assert r.status_code == 201    
-
-    # validate
-
-    r = client.get(f"/jobs/{job_id}/skills")
+    assert r.status_code == 409    
     r_json = r.json()
-    assert r.status_code == 200
-
-    rows = r.json()
-    assert len(rows) == 1
-
-    # re-shape to allow finding despite order
-    by_id = {row["skill"]["id"]: row for row in rows}
-
-    # name
-    assert by_id[skill1_id]["skill"]["name"] == t_skill1
-    #assert by_id[skill2_id]["skill"]["name"] == t_skill2    
-    # id
-    assert skill1_id in by_id
-    #assert skill2_id in by_id
-    # used in
-    assert by_id[skill1_id]["how_used"] == t_used_in1
-    #assert by_id[skill2_id]["how_used"] == t_used_in2    
+    assert r_json["detail"] == "Skill already attached to this job"
 
 
 def test_add_one_skill_to_two_different_jobs_validate_added_to_both_jobs(client):
@@ -450,6 +430,7 @@ def test_delete_skill_in_use_fails(client):
     # Create skill
     skill = create_complete_test_skill(client)
     skill_id = skill["id"]
+    skill_name = skill["name"]
 
     # Attach skill to job
     r = client.post(
@@ -464,3 +445,21 @@ def test_delete_skill_in_use_fails(client):
     # This is the key assertion
     assert r.status_code == 409
     assert "in use" in r.json()["detail"].lower()
+
+    # assert skill not deleted
+
+    # validation data object (re-form data)
+    skills_by_job_id = {}
+
+    # Job 1 skills link GET
+    r = client.get(f"/jobs/{job_id}/skills")
+    r_json = r.json()
+    skills_by_job_id[job_id] = r_json
+    assert r.status_code == 200
+    
+    assert job_id in skills_by_job_id
+    
+    # Validate skill association NOT deleted from Job
+    assert skills_by_job_id[job_id][0]["skill"]["id"] == skill_id
+    assert skills_by_job_id[job_id][0]["skill"]["name"] == skill_name        
+

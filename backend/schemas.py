@@ -53,3 +53,11 @@ class SkillJobRead(BaseModel):
     job: JobRead
     how_used: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
+
+class JobSkillUpdate(BaseModel):
+    how_used: Optional[str] = None
+
+class SkillUpdate(BaseModel):
+    name: Optional[str] = None
+    category: Optional[str] = None
+    notes: Optional[str] = None
