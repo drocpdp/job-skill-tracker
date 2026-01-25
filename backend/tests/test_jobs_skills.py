@@ -211,7 +211,6 @@ def test_add_two_skills_to_job_delete_one_skill(client):
     # validate
 
     r = client.get(f"/jobs/{job_id}/skills")
-    r_json = r.json()
     assert r.status_code == 200
 
     rows = r.json()
