@@ -140,7 +140,7 @@ def create_skill(payload: SkillCreate, db: Session = Depends(get_db)):
 
     existing = db.execute(select(Skill).where(Skill.name == name)).scalar_one_or_none()
     if existing:
-        return existing
+        raise HTTPException(status_code=409, detail="Skill already exists")
 
     skill = Skill(name=name, category=payload.category, notes=payload.notes)
     db.add(skill)
