@@ -15,10 +15,7 @@ from backend.schemas import (
     JobCreate, JobRead, JobUpdate,
     SkillCreate, SkillRead,
     JobSkillUpsert, JobSkillRead,
-    SkillJobRead,
-    # NEW:
-    SkillUpdate,
-    JobSkillUpdate,
+    SkillUpdate, JobSkillUpdate,
 )
 
 # Load .env explicitly from this folder
@@ -129,6 +126,9 @@ def update_job_skill(job_id: int, skill_id: int, payload: JobSkillUpdate, db: Se
     db.refresh(assoc)
 
     skill = db.get(Skill, skill_id)
+    if not skill:
+        raise HTTPException(status_code=500,
+            detail="Invariant violated: linked skill missing")
     return {"skill": skill, "how_used": assoc.how_used}
 
 

@@ -669,7 +669,7 @@ def test_add_skills_to_job_change_skill_name_and_notes_confirm_changes_cascade(c
     assert skills_by_job_id[job_id2][0]["skill"]["notes"] == new_notes       
 
 
-def test_delete_job_with_attached_skills(client):
+def test_delete_job_with_attached_skill(client):
     # Create job
     job_obj = create_complete_test_job(client)
     job_id = job_obj["id"]
@@ -720,3 +720,108 @@ def test_delete_job_with_attached_skills(client):
     r_json = r.json()
     assert r.status_code == 404
     assert r_json["detail"] == "Job not found"
+
+
+def test_create_skill_related_to_multiple_jobs_delete_job_with_attached_skill_validate_other_relation_remains(client):
+    # Create job 1
+    job_obj1 = create_complete_test_job(client)
+    job_id1 = job_obj1["id"]
+
+    # Create job 2
+    job_obj2 = create_complete_test_job(client)
+    job_id2 = job_obj2["id"]    
+
+    # Create skill
+    
+    skill = create_complete_test_skill(client)
+    skill_id = skill["id"]
+    t_used_in = create_field("used-in")
+    t_skill = skill["name"]
+
+    package = {
+        "skill_id": skill_id,
+        "how_used": t_used_in,
+    }
+
+    # Add skill to job 1
+
+    r = client.post(f"/jobs/{job_id1}/skills", json=package)
+    assert r.status_code == 201    
+
+    # validate
+
+    r = client.get(f"/jobs/{job_id1}/skills")
+    r_json = r.json()
+    assert r.status_code == 200
+
+    rows = r.json()
+    assert len(rows) == 1
+ 
+    # re-shape to allow finding despite order
+    by_id = {row["skill"]["id"]: row for row in rows}
+
+    # name
+    assert by_id[skill_id]["skill"]["name"] == t_skill
+    # id
+    assert skill_id in by_id
+    # used in
+    assert by_id[skill_id]["how_used"] == t_used_in
+
+    # Add skill to job 2
+
+    r = client.post(f"/jobs/{job_id2}/skills", json=package)
+    assert r.status_code == 201    
+
+    # validate
+
+    r = client.get(f"/jobs/{job_id2}/skills")
+    r_json = r.json()
+    assert r.status_code == 200
+
+    rows = r.json()
+    assert len(rows) == 1
+ 
+    # re-shape to allow finding despite order
+    by_id = {row["skill"]["id"]: row for row in rows}
+
+    # name
+    assert by_id[skill_id]["skill"]["name"] == t_skill
+    # id
+    assert skill_id in by_id
+    # used in
+    assert by_id[skill_id]["how_used"] == t_used_in
+
+    # delete job 1
+    r = client.delete(f"/jobs/{job_id1}")
+    assert r.status_code == 204
+
+    # validate deletion of job 1 and removal of skill link
+    r = client.get(f"/jobs/{job_id1}")
+    assert r.status_code == 404
+    r_json = r.json()
+    assert r_json["detail"] == "Job not found"
+
+    r = client.get(f"/jobs/{job_id1}/skills")
+    r_json = r.json()
+    assert r.status_code == 404
+    assert r_json["detail"] == "Job not found"
+
+    # validate skills still linked to job 2
+
+    r = client.get(f"/jobs/{job_id2}/skills")
+    r_json = r.json()
+    assert r.status_code == 200
+
+    rows = r.json()
+    assert len(rows) == 1
+ 
+    # re-shape to allow finding despite order
+    by_id = {row["skill"]["id"]: row for row in rows}
+
+    # name
+    assert by_id[skill_id]["skill"]["name"] == t_skill
+    # id
+    assert skill_id in by_id
+    # used in
+    assert by_id[skill_id]["how_used"] == t_used_in    
+
