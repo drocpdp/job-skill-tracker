@@ -239,7 +239,7 @@ def test_change_notes_of_added_skill_to_duplicate_name_skill(client):
     assert skill_get["notes"] == payload["notes"]
 
 
-def test_delete_skill_not_in_use(client):
+def test_delete_non_existent_skill(client):
     # Create job
     job = create_complete_test_job(client)
     job_id = job["id"]
@@ -266,4 +266,18 @@ def test_delete_skill_not_in_use(client):
     r_get = client.get(f"/skills/{skill_id}")
     assert r_get.status_code == 404
     assert r_get.json()["detail"] == "Skill not found"
+
+
+def test_create_duplicate_named_skill_expect_409_error(client):
+    # create skill
+    skill = create_complete_test_skill(client)
+    skill_id = skill["id"]
+    skill_name = skill["name"]
+    skill_notes = skill["notes"]
+
+    # create duplicate skill
+    payload = {"t_name": skill_name}
+    r_post = post_create_skill(client, **payload)
+    assert r_post.status_code == 409
+    assert r_post.json()["detail"] == "Skill already exists"
     
