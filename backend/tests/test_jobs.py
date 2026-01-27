@@ -282,3 +282,48 @@ def test_get_jobs_with_non_existent_company_name_expect_no_results(client):
     job_get = r_get.json()
 
     assert len(job_get) == 0
+
+
+def test_delete_existing_job(client):
+    job = create_complete_test_job(client)
+
+    job_id = job["id"]
+    job_company = job["company"]
+
+    # validate
+    r = client.get(f"/jobs/{job_id}")
+    assert r.status_code == 200
+    job2 = r.json()
+    assert job2["id"] == job_id
+    assert job2["company"] == job_company    
+
+    # delete job
+    r = client.delete(f"/jobs/{job_id}")
+    assert r.status_code == 204
+    
+    # validate
+    r = client.get(f"/jobs/{job_id}")
+    assert r.status_code == 404
+
+    jobs = r.json()
+    assert jobs["detail"] == "Job not found"
+
+
+def test_delete_non_existing_job(client):
+    job = create_complete_test_job(client)
+
+    job_id = job["id"]
+    job_company = job["company"]
+
+    # validate
+    r = client.get(f"/jobs/{job_id}")
+    assert r.status_code == 200
+    job2 = r.json()
+    assert job2["id"] == job_id
+    assert job2["company"] == job_company    
+
+    # delete job (non-existing)
+    r = client.delete(f"/jobs/{job_id + 1}")
+    assert r.status_code == 404
+    r_json = r.json()
+    assert r_json["detail"] == "Job not found"

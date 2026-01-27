@@ -204,37 +204,6 @@ def get_skill(skill_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Skill not found")
     return skill
 
-
-@app.get("/skills/jobs", response_model=list[SkillJobRead])
-def list_jobs_for_skill(
-    skill: Optional[str] = None,
-    skill_id: Optional[int] = None,
-    db: Session = Depends(get_db),
-):
-    if skill_id is None and (skill is None or not skill.strip()):
-        raise HTTPException(status_code=422, detail="Provide either skill_id or skill name")
-
-    if skill_id is not None:
-        skill_obj = db.get(Skill, skill_id)
-    else:
-        skill_name = skill.strip()
-        skill_obj = db.execute(
-            select(Skill).where(Skill.name.ilike(skill_name))
-        ).scalar_one_or_none()
-
-    if not skill_obj:
-        raise HTTPException(status_code=404, detail="Skill not found")
-
-    rows = db.execute(
-        select(JobSkill, Job)
-        .join(Job, Job.id == JobSkill.job_id)
-        .where(JobSkill.skill_id == skill_obj.id)
-        .order_by(Job.id.desc())
-    ).all()
-
-    return [{"job": job, "how_used": job_skill.how_used} for job_skill, job in rows]
-
-
 @app.get("/jobs", response_model=list[JobRead])
 def list_jobs(
     q: Optional[str] = None,
