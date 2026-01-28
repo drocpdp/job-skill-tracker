@@ -216,8 +216,6 @@ def test_create_job_invalid_end_date_30_day_month_31_days(client):
     assert r_json["detail"][0]["msg"] == "Input should be a valid date or datetime, day value is outside expected range"
 
 
-
-
 def test_create_job_validate_all_fields_of_return_object_missing_location(client):
     payload = {
         "t_company": create_field("company"),
@@ -444,3 +442,39 @@ def test_delete_non_existing_job(client):
     assert r.status_code == 404
     r_json = r.json()
     assert r_json["detail"] == "Job not found"
+
+
+def test_create_job_special_characters_in_name(client):
+    payload = get_sample_job_payload()
+    company = " ACME 'R&D' – Zürich 💼 "
+    payload["t_company"] = company
+    r = post_create_job(client, **payload)
+    assert r.status_code == 201
+    r_json = r.json()
+    job_id = r_json["id"]
+    job_company = company
+
+    # validate
+    r = client.get(f"/jobs/{job_id}")
+    assert r.status_code == 200
+    job2 = r.json()
+    assert job2["id"] == job_id
+    assert job2["company"] == company
+
+
+def test_create_job_only_whitespace_characters_in_name(client):
+    payload = get_sample_job_payload()
+    company = "      "
+    payload["t_company"] = company
+    r = post_create_job(client, **payload)
+    assert r.status_code == 201
+    r_json = r.json()
+    job_id = r_json["id"]
+    job_company = company
+
+    # validate
+    r = client.get(f"/jobs/{job_id}")
+    assert r.status_code == 200
+    job2 = r.json()
+    assert job2["id"] == job_id
+    assert job2["company"] == company
