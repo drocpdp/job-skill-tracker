@@ -5,6 +5,20 @@ import json
 from utils.strings import get_unique_s, create_field
 from utils.dates import make_date
 
+
+def get_sample_job_payload():
+    payload = {
+        "t_company": create_field("company"),
+        "t_title": create_field("title"),
+        "t_location": create_field("location"),
+        "t_start_date": make_date(year=2022, month=5, day=23),
+        "t_end_date": make_date(year=2024, month=12, day=14),
+        "t_summary": create_field("summary"),
+        "t_notes": create_field("notes"),
+    }
+    return payload    
+
+
 def post_create_job(client, **kwargs):
     payload = {
         "company": kwargs.get("t_company"),
