@@ -19,7 +19,8 @@ from backend.schemas import (
 )
 
 # Load .env explicitly from this folder
-load_dotenv(Path(__file__).parent / ".env")
+if not os.getenv("DATABASE_URL"):
+    load_dotenv(Path(__file__).parent / ".env")
 
 
 @asynccontextmanager
