@@ -19,7 +19,7 @@ migrate:
 	docker compose --profile ops run --rm migrate
 
 test:
-	docker compose --profile test run --rm test
+	docker compose --profile test run --rm --build test
 
 test-down:
 	docker compose --profile test down
