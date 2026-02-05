@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { SkillRead, SkillUpdate } from "../types";
 import { apiDeleteSkill, apiUpdateSkill } from "../api";
+import { api } from "../api/http";
 
 type SortKey = keyof Pick<SkillRead, "id" | "name" | "category" | "notes">;
 
@@ -17,6 +18,19 @@ type RowDraft = {
   notes: string;
 };
 
+type JobLite = {
+  id: number;
+  company: string;
+  title: string;
+};
+
+type JobSkillLite = {
+  skill: { id: number };
+  how_used: string | null;
+};
+
+type JobWithHow = JobLite & { how_used: string | null };
+
 export function SkillTable({ skills, loading, error, onRefresh }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -30,6 +44,11 @@ export function SkillTable({ skills, loading, error, onRefresh }: Props) {
   // Notes drawer
   const [notesOpen, setNotesOpen] = useState(false);
   const [notesSkill, setNotesSkill] = useState<SkillRead | null>(null);
+
+  // Associated jobs for the drawer (+ how_used)
+  const [jobsUsingSkill, setJobsUsingSkill] = useState<JobWithHow[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
+  const [jobsError, setJobsError] = useState<string | null>(null);
 
   const sorted = useMemo(() => {
     const copy = [...skills];
@@ -141,6 +160,9 @@ export function SkillTable({ skills, loading, error, onRefresh }: Props) {
   function closeNotes() {
     setNotesOpen(false);
     setNotesSkill(null);
+    setJobsUsingSkill([]);
+    setJobsError(null);
+    setJobsLoading(false);
   }
 
   function previewNotes(notes: string | null | undefined, max = 60) {
@@ -149,6 +171,62 @@ export function SkillTable({ skills, loading, error, onRefresh }: Props) {
     if (t.length <= max) return t;
     return t.slice(0, max).trimEnd() + "…";
   }
+
+  function previewHowUsed(text: string | null | undefined, max = 90) {
+    const t = (text ?? "").trim();
+    if (!t) return "";
+    if (t.length <= max) return t;
+    return t.slice(0, max).trimEnd() + "…";
+  }
+
+  // Fetch associated jobs + "how_used" when drawer opens
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadJobsForSkill(skillId: number) {
+      setJobsLoading(true);
+      setJobsError(null);
+      setJobsUsingSkill([]);
+
+      try {
+        // 1) jobs that include this skill
+        const jobs = await api<JobLite[]>(`/jobs?skill_id=${skillId}`);
+
+        // 2) fetch how_used by asking each job for its linked skills
+        // cap to avoid lots of requests if a skill is linked everywhere
+        const cap = 25;
+        const jobsToResolve = jobs.slice(0, cap);
+
+        const enriched = await Promise.all(
+          jobsToResolve.map(async (j) => {
+            try {
+              const links = await api<JobSkillLite[]>(`/jobs/${j.id}/skills`);
+              const match = links.find((x) => x.skill?.id === skillId);
+              return { ...j, how_used: match?.how_used ?? null } satisfies JobWithHow;
+            } catch {
+              // if one job fails, don’t break the whole drawer
+              return { ...j, how_used: null } satisfies JobWithHow;
+            }
+          })
+        );
+
+        // if we capped, append a note row? we’ll just show a subtle hint in UI
+        if (!cancelled) setJobsUsingSkill(enriched);
+      } catch (e: any) {
+        if (!cancelled) setJobsError(e?.message ?? "Failed to load jobs for this skill");
+      } finally {
+        if (!cancelled) setJobsLoading(false);
+      }
+    }
+
+    if (notesOpen && notesSkill?.id) {
+      loadJobsForSkill(notesSkill.id);
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [notesOpen, notesSkill?.id]);
 
   return (
     <section className="rounded-2xl border border-slate-700 bg-slate-800/60 p-5">
@@ -188,12 +266,9 @@ export function SkillTable({ skills, loading, error, onRefresh }: Props) {
               <Th onClick={() => toggleSort("id")}>ID{sortGlyph("id")}</Th>
               <Th onClick={() => toggleSort("name")}>Name{sortGlyph("name")}</Th>
               <Th onClick={() => toggleSort("category")}>Category{sortGlyph("category")}</Th>
-
-              {/* Make Notes column narrower */}
               <Th onClick={() => toggleSort("notes")}>
                 <span className="inline-block w-[18rem]">Notes{sortGlyph("notes")}</span>
               </Th>
-
               <th className="px-4 py-3 text-right text-slate-300">Actions</th>
             </tr>
           </thead>
@@ -247,7 +322,6 @@ export function SkillTable({ skills, loading, error, onRefresh }: Props) {
                       )}
                     </td>
 
-                    {/* Notes: narrower preview + ellipsis cue */}
                     <td className="px-4 py-3">
                       {isEditing ? (
                         <input
@@ -279,7 +353,7 @@ export function SkillTable({ skills, loading, error, onRefresh }: Props) {
                             onClick={() => openNotes(s)}
                             disabled={rowBusyId !== null}
                             className="shrink-0 rounded-lg border border-slate-700 bg-slate-900/60 px-2 py-1 text-xs text-slate-200 hover:bg-slate-900/80 disabled:opacity-60"
-                            title="View full notes"
+                            title="View full notes (and associated jobs)"
                           >
                             View
                           </button>
@@ -350,19 +424,72 @@ export function SkillTable({ skills, loading, error, onRefresh }: Props) {
               </button>
             </div>
 
-            <div className="p-4 space-y-3">
-              <div className="text-sm font-semibold text-slate-200">Notes</div>
-
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 text-sm text-slate-100 whitespace-pre-wrap">
-                {notesSkill.notes?.trim() ? (
-                  notesSkill.notes
-                ) : (
-                  <span className="text-slate-400">No notes yet for this skill.</span>
-                )}
+            <div className="p-4 space-y-5">
+              {/* Notes */}
+              <div className="space-y-2">
+                <div className="text-sm font-semibold text-slate-200">Notes</div>
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 text-sm text-slate-100 whitespace-pre-wrap">
+                  {notesSkill.notes?.trim() ? (
+                    notesSkill.notes
+                  ) : (
+                    <span className="text-slate-400">No notes yet for this skill.</span>
+                  )}
+                </div>
+                <div className="text-xs text-slate-400">
+                  Use notes for recruiter-facing meaning/scope/examples (not the job-specific “how used”).
+                </div>
               </div>
 
-              <div className="text-xs text-slate-400">
-                Use notes for recruiter-facing meaning/scope/examples (not the job-specific “how used”).
+              {/* Associated Jobs + Used how */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-semibold text-slate-200">Used in jobs</div>
+                  <div className="text-xs text-slate-400">
+                    {jobsLoading ? "Loading…" : `${jobsUsingSkill.length}`}
+                  </div>
+                </div>
+
+                {jobsError && (
+                  <div className="rounded-xl border border-red-900/40 bg-red-950/40 p-3 text-sm text-red-200">
+                    {jobsError}
+                  </div>
+                )}
+
+                {!jobsLoading && !jobsError && jobsUsingSkill.length === 0 && (
+                  <div className="text-sm text-slate-400">Not linked to any jobs yet.</div>
+                )}
+
+                {!jobsError && jobsUsingSkill.length > 0 && (
+                  <div className="space-y-2 max-h-72 overflow-auto pr-1">
+                    {jobsUsingSkill.map((j) => (
+                      <a
+                        key={j.id}
+                        href={`/jobs/${j.id}/skills`}
+                        className="block rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-2 hover:bg-slate-900/60"
+                        title="Open job → Manage skills"
+                      >
+                        <div className="text-sm font-medium text-slate-100 truncate">
+                          {j.company}
+                        </div>
+                        <div className="text-xs text-slate-400 truncate">{j.title}</div>
+
+                        <div className="mt-2 text-xs text-slate-300">
+                          <span className="text-slate-400">Used how:</span>{" "}
+                          {j.how_used?.trim() ? (
+                            <span className="text-slate-200">{previewHowUsed(j.how_used, 110)}</span>
+                          ) : (
+                            <span className="text-slate-500">(not set)</span>
+                          )}
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                )}
+
+                <div className="text-xs text-slate-400">
+                  Note: “Used how” is pulled from each job via{" "}
+                  <span className="font-mono">GET /jobs/&lt;id&gt;/skills</span> (capped at 25 jobs).
+                </div>
               </div>
             </div>
           </div>
