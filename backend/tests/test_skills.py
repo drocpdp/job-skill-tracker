@@ -163,8 +163,11 @@ def test_change_name_of_added_skill(client):
     assert skill_get["name"] == skill_name
     assert skill_get["notes"] == skill_notes
 
+    # retain original payload
+    payload = {k: v for (k,v) in skill_get.items()}
+
     # Change name
-    payload = {"name": create_field("UPDATE-NAME")}
+    payload["name"] = create_field("UPDATE-NAME")
     r = client.patch(f"/skills/{skill_id}", json=payload)
     r_json = r.json()
     assert r_json["name"] == payload["name"]

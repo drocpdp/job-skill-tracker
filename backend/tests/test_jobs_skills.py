@@ -486,9 +486,16 @@ def test_add_skills_to_job_change_skill_name_confirm_changes_cascade(client):
     r = client.post(f"/jobs/{job_id2}/skills", json={"skill_id": skill_id})
     assert r.status_code == 201    
 
-    # Change name of skill
+    # Change name of skill, keeping other old values
+    old_payload = {
+        "id": skill_id,
+        "name": skill_name,
+        "notes": skill_notes,
+    }
     new_name = create_field("NEW_NAME")
-    r = client.patch(f"/skills/{skill_id}", json={"name": new_name})
+    old_payload.update({"name": new_name})
+    new_payload = old_payload
+    r = client.patch(f"/skills/{skill_id}", json=new_payload)
     assert r.status_code == 200
     skill_get = r.json()
     assert skill_get["id"] == skill_id
@@ -622,7 +629,8 @@ def test_add_skills_to_job_change_skill_name_and_notes_confirm_changes_cascade(c
     r = client.post(f"/jobs/{job_id2}/skills", json={"skill_id": skill_id})
     assert r.status_code == 201    
 
-    # Change name of skill
+
+    # Change name of skill, retaining old values
     new_name = create_field("NEW_NAME")
     new_notes = create_field("NEW_NOTES")
     r = client.patch(f"/skills/{skill_id}", json={"name": new_name, "notes": new_notes})
