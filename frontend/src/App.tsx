@@ -1,49 +1,34 @@
-import { useEffect, useState } from "react";
-import { apiGetSkills } from "./api";
-import type { SkillRead } from "./types";
-import { SkillCreateForm } from "./components/SkillCreateForm";
-import { SkillTable } from "./components/SkillTable";
+import { NavLink } from "react-router-dom";
+import AppRoutes from "./AppRoutes";
 
 export default function App() {
-  const [skills, setSkills] = useState<SkillRead[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const linkClass = ({ isActive }: { isActive: boolean }) =>
+    `px-3 py-2 rounded-xl text-sm transition ${
+      isActive
+        ? "bg-slate-200 text-slate-900"
+        : "text-slate-200 hover:bg-slate-800/60"
+    }`;
 
-  async function refresh() {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await apiGetSkills();
-      setSkills(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setLoading(false);
-    }
-  }
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100">
+      <div className="max-w-6xl mx-auto p-4">
+        <header className="flex items-center justify-between mb-4">
+          <div className="font-bold text-lg tracking-tight">Job Skill Tracker</div>
+          <nav className="flex gap-2">
+            <NavLink to="/jobs" className={linkClass}>
+              Jobs
+            </NavLink>
+            <NavLink to="/skills" className={linkClass}>
+              Skills
+            </NavLink>
+          </nav>
+        </header>
 
-  useEffect(() => {
-    refresh();
-  }, []);
-
-return (
-  <div className="min-h-screen bg-slate-900 text-slate-100">
-    <div className="mx-auto max-w-5xl p-6 space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold text-slate-100">
-          Job Skill Tracker — Admin
-        </h1>
-        <p className="text-sm text-slate-300">
-          Create skills, inspect responses, and sort the list. (Easy to add auth later.)
-        </p>
-      </header>
-
-      <div className="grid gap-6">
-        <SkillCreateForm onCreated={() => refresh()} />
-        <SkillTable skills={skills} loading={loading} error={error} onRefresh={refresh} />
+        {/* Dark container to match your components */}
+        <main className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+          <AppRoutes />
+        </main>
       </div>
     </div>
-  </div>
-);
-
+  );
 }

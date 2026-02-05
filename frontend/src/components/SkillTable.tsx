@@ -27,6 +27,10 @@ export function SkillTable({ skills, loading, error, onRefresh }: Props) {
   const [rowBusyId, setRowBusyId] = useState<number | null>(null);
   const [rowError, setRowError] = useState<string | null>(null);
 
+  // Notes drawer
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notesSkill, setNotesSkill] = useState<SkillRead | null>(null);
+
   const sorted = useMemo(() => {
     const copy = [...skills];
     copy.sort((a, b) => {
@@ -129,12 +133,31 @@ export function SkillTable({ skills, loading, error, onRefresh }: Props) {
     }
   }
 
+  function openNotes(skill: SkillRead) {
+    setNotesSkill(skill);
+    setNotesOpen(true);
+  }
+
+  function closeNotes() {
+    setNotesOpen(false);
+    setNotesSkill(null);
+  }
+
+  function previewNotes(notes: string | null | undefined, max = 60) {
+    const t = (notes ?? "").trim();
+    if (!t) return "";
+    if (t.length <= max) return t;
+    return t.slice(0, max).trimEnd() + "…";
+  }
+
   return (
     <section className="rounded-2xl border border-slate-700 bg-slate-800/60 p-5">
       <div className="flex items-center justify-between gap-3">
         <div className="space-y-0.5">
           <h2 className="text-lg font-semibold text-slate-100">Skills</h2>
-          <p className="text-xs text-slate-400">Click a cell to edit. Save/Cancel applies per row.</p>
+          <p className="text-xs text-slate-400">
+            Click a cell to edit. Notes show a short preview; use “View” (or the ellipsis) for the full text.
+          </p>
         </div>
 
         <button
@@ -165,7 +188,12 @@ export function SkillTable({ skills, loading, error, onRefresh }: Props) {
               <Th onClick={() => toggleSort("id")}>ID{sortGlyph("id")}</Th>
               <Th onClick={() => toggleSort("name")}>Name{sortGlyph("name")}</Th>
               <Th onClick={() => toggleSort("category")}>Category{sortGlyph("category")}</Th>
-              <Th onClick={() => toggleSort("notes")}>Notes{sortGlyph("notes")}</Th>
+
+              {/* Make Notes column narrower */}
+              <Th onClick={() => toggleSort("notes")}>
+                <span className="inline-block w-[18rem]">Notes{sortGlyph("notes")}</span>
+              </Th>
+
               <th className="px-4 py-3 text-right text-slate-300">Actions</th>
             </tr>
           </thead>
@@ -206,7 +234,9 @@ export function SkillTable({ skills, loading, error, onRefresh }: Props) {
                       {isEditing ? (
                         <input
                           value={draft?.category ?? ""}
-                          onChange={(e) => setDraft((d) => (d ? { ...d, category: e.target.value } : d))}
+                          onChange={(e) =>
+                            setDraft((d) => (d ? { ...d, category: e.target.value } : d))
+                          }
                           className="w-full rounded-lg border border-slate-600 bg-slate-900/70 px-2 py-1 text-sm text-slate-100 outline-none focus:border-slate-400"
                           disabled={isBusy}
                         />
@@ -217,6 +247,7 @@ export function SkillTable({ skills, loading, error, onRefresh }: Props) {
                       )}
                     </td>
 
+                    {/* Notes: narrower preview + ellipsis cue */}
                     <td className="px-4 py-3">
                       {isEditing ? (
                         <input
@@ -224,11 +255,35 @@ export function SkillTable({ skills, loading, error, onRefresh }: Props) {
                           onChange={(e) => setDraft((d) => (d ? { ...d, notes: e.target.value } : d))}
                           className="w-full rounded-lg border border-slate-600 bg-slate-900/70 px-2 py-1 text-sm text-slate-100 outline-none focus:border-slate-400"
                           disabled={isBusy}
+                          placeholder="Add recruiter-facing notes…"
                         />
                       ) : (
-                        <CellButton onClick={() => beginEdit(s)} disabled={rowBusyId !== null}>
-                          {s.notes ?? <span className="text-slate-500">(empty)</span>}
-                        </CellButton>
+                        <div className="flex items-center justify-between gap-2">
+                          <CellButton onClick={() => beginEdit(s)} disabled={rowBusyId !== null}>
+                            {s.notes?.trim() ? (
+                              <div className="flex items-center gap-1 max-w-[18rem]">
+                                <span className="truncate text-slate-100">
+                                  {previewNotes(s.notes, 60)}
+                                </span>
+                                <span className="text-slate-400 text-xs" title="View full notes">
+                                  …
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-slate-500">(empty)</span>
+                            )}
+                          </CellButton>
+
+                          <button
+                            type="button"
+                            onClick={() => openNotes(s)}
+                            disabled={rowBusyId !== null}
+                            className="shrink-0 rounded-lg border border-slate-700 bg-slate-900/60 px-2 py-1 text-xs text-slate-200 hover:bg-slate-900/80 disabled:opacity-60"
+                            title="View full notes"
+                          >
+                            View
+                          </button>
+                        </div>
                       )}
                     </td>
 
@@ -271,6 +326,48 @@ export function SkillTable({ skills, loading, error, onRefresh }: Props) {
       <p className="mt-3 text-xs text-slate-400">
         Update sends only changed fields via PATCH. Delete asks for confirmation.
       </p>
+
+      {/* Notes Drawer */}
+      {notesOpen && notesSkill && (
+        <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Skill notes">
+          <div className="absolute inset-0 bg-black/60" onClick={closeNotes} />
+
+          <div className="absolute right-0 top-0 h-full w-full max-w-xl border-l border-slate-800 bg-slate-950 text-slate-100 shadow-2xl">
+            <div className="flex items-start justify-between gap-3 border-b border-slate-800 p-4">
+              <div className="min-w-0">
+                <div className="text-xs text-slate-400">Skill</div>
+                <div className="text-lg font-semibold truncate">{notesSkill.name}</div>
+                <div className="mt-1 text-xs text-slate-400 truncate">
+                  {notesSkill.category ?? "—"}
+                </div>
+              </div>
+
+              <button
+                className="rounded-xl border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-200 hover:bg-slate-900/80 active:scale-[0.99]"
+                onClick={closeNotes}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3">
+              <div className="text-sm font-semibold text-slate-200">Notes</div>
+
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 text-sm text-slate-100 whitespace-pre-wrap">
+                {notesSkill.notes?.trim() ? (
+                  notesSkill.notes
+                ) : (
+                  <span className="text-slate-400">No notes yet for this skill.</span>
+                )}
+              </div>
+
+              <div className="text-xs text-slate-400">
+                Use notes for recruiter-facing meaning/scope/examples (not the job-specific “how used”).
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
