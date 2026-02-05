@@ -14,7 +14,7 @@ export function SkillCreateForm({ onCreated }: Props) {
   const [form, setForm] = useState<SkillCreate>({
     name: "",
     category: "",
-    description: "",
+    notes: "",
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -32,12 +32,12 @@ export function SkillCreateForm({ onCreated }: Props) {
   function normalizePayload(input: SkillCreate): SkillCreate {
     const name = input.name.trim();
     const category = (input.category ?? "").trim();
-    const description = (input.description ?? "").trim();
+    const notes = (input.notes ?? "").trim();
 
     return {
       name,
       category: category.length ? category : null,
-      description: description.length ? description : null,
+      notes: notes.length ? notes : null,
     };
   }
 
@@ -54,8 +54,7 @@ export function SkillCreateForm({ onCreated }: Props) {
       setResult({ ok: true, data: created });
       onCreated?.(created);
 
-      // reset fields
-      setForm({ name: "", category: "", description: "" });
+      setForm({ name: "", category: "", notes: "" });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setResult({ ok: false, error: msg });
@@ -96,10 +95,10 @@ export function SkillCreateForm({ onCreated }: Props) {
         </div>
 
         <div className="space-y-1">
-          <label className="text-sm text-slate-200">Description</label>
+          <label className="text-sm text-slate-200">Notes</label>
           <textarea
-            value={form.description ?? ""}
-            onChange={(e) => setField("description", e.target.value)}
+            value={form.notes ?? ""}
+            onChange={(e) => setField("notes", e.target.value)}
             placeholder="Optional notes…"
             className="min-h-24 w-full rounded-xl border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
           />

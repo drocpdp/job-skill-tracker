@@ -176,8 +176,7 @@ def update_skill(skill_id: int, payload: SkillUpdate, db: Session = Depends(get_
     if payload.category is not None:
         skill.category = payload.category
 
-    if payload.notes is not None:
-        skill.notes = payload.notes
+    skill.notes = payload.notes
 
     try:
         db.commit()
