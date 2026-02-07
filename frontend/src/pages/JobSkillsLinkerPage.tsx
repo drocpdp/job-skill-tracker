@@ -85,14 +85,17 @@ export default function JobSkillsLinkerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  // autofocus textarea when entering edit mode
   useEffect(() => {
-    if (editing && editRef.current) {
-      editRef.current.focus();
-      editRef.current.selectionStart = editRef.current.value.length;
-      editRef.current.selectionEnd = editRef.current.value.length;
-    }
-  }, [editing]);
+    if (!editing?.skillId) return;
+    const el = editRef.current;
+    if (!el) return;
+
+    el.focus();
+
+    // Optional: place cursor at end once
+    const len = el.value.length;
+    el.setSelectionRange(len, len);
+  }, [editing?.skillId]);
 
   function setPending(
     setter: React.Dispatch<React.SetStateAction<Set<number>>>,
