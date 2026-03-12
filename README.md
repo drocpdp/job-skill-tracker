@@ -1,19 +1,42 @@
+
 # Job Skill Tracker API (FastAPI + Postgres)
 
-A personal “experience & skills” tracker built as a clean, testable REST API. The goal is to model job experiences, the skills used in those roles, and the relationships between them—so you can query, analyze, and grow a skills portfolio over time.
+Job Skill Tracker is a backend API that models professional experience as structured data. It tracks jobs, skills, and how these skills were used across roles -- allowing a developer's career portfolio to be queried and analyzed programatically.
 
-## What this is
-- **FastAPI** backend with a **PostgreSQL** datastore
-- Designed around real-world API patterns: validation, persistence, relational integrity, and automated tests
-- Built for extensibility (migrations, environment separation, CI readiness, Docker support)
+## Technologies Demonstrated
 
-## Key capabilities
-- Create and manage **Jobs / Experiences**
-- Create and manage **Skills**
-- Associate skills to jobs (many-to-many) with safe integrity rules
-- Query and filter resources via REST endpoints
-- Database schema managed through **Alembic migrations**
-- Test suite with **pytest** (separate test database)
+FastAPI • Python • PostgreSQL • SQLAlchemy • Alembic • pytest • Docker-ready architecture • REST API design
+
+## Features
+
+* REST API for managing job experience and skills
+* Many-to-many relational modeling (jobs ↔ skills)
+* Data validation using Pydantic schemas
+* Database migrations with Alembic
+* Environment isolation (separate dev and test databases)
+* Automated test suite with pytest
+
+## Engineering Practices Demonstrated
+
+* Clean API architecture (routing, schema, persistence layers)
+* Relational database modeling
+* Database migrations with Alembic
+* Environment-based configuration
+* Automated testing with isolated test database
+* Container-ready development workflow
+
+## Why I Built This
+
+As a QA automation engineer, I’ve worked with many complex systems but wanted a project that demonstrates backend API design, relational data modeling, and disciplined database migrations.
+
+This project models a professional career as structured data that can be queried, analyzed, and extended over time.
+
+## Example Use Cases
+
+• Query which technologies were used in each role  
+• Identify the most frequently used skills across a career  
+• Track how skill usage evolves over time  
+• Generate structured data for tailored resumes or portfolio analysis
 
 ## Tech stack
 - **Python**, **FastAPI**
@@ -22,22 +45,23 @@ A personal “experience & skills” tracker built as a clean, testable REST API
 - **Alembic** (migrations)
 - **pytest** (tests)
 
+## Project Structure
+```
+backend/
+  main.py            # FastAPI entry point
+  models/            # SQLAlchemy models
+  schemas/           # Pydantic schemas
+  routers/           # API endpoints
+  migrations/        # Alembic migration history
+tests/               # pytest suite
+```
+
 ## Architecture (high-level)
 - API layer: FastAPI routes + Pydantic schemas
 - Persistence: SQLAlchemy models + session management
 - Migrations: Alembic for reproducible schema changes across environments
 - Environments: separate `.env` (dev) and `.env.test` (tests)
 
-## Quickstart (local, no Docker)
-
-Typical flow:
-1. Create and activate a venv
-2. Install dependencies
-3. Create `.env` and `.env.test`
-4. Create dev/test databases
-5. Run Alembic migrations
-6. Run tests
-7. Start the API
 
 ## Running tests
 Tests run against the **test database** (configured in `backend/.env.test`):
@@ -57,19 +81,19 @@ A typical Docker workflow will look like:
 - `docker compose exec api alembic upgrade head`
 - `docker compose exec api pytest`
 
-## Why this matters (engineering focus)
-This project demonstrates:
-- Proper modeling of relational data (many-to-many associations)
-- Environment-safe configuration (dev vs test)
-- Schema migration discipline to prevent drift
-- Repeatable automation (tests, migrations, startup health checks)
-
 ## Roadmap (next steps)
 - Docker-first dev workflow (`docker-compose.yml`)
-- CI pipeline (GitHub Actions): lint + tests + migration checks
+- CI pipeline with GitHub Actions
 - Repository/service layer refactor for larger scale
 - Additional entities (projects, achievements, tags, metrics)
-- Optional frontend (React) for dashboards and analytics
+- Frontend (React) for dashboards and analytics
+- Skill analytics queries
+
+## Future analytics capabilities:
+
+- Which skills appear most often across roles
+- Skill growth over time
+- Querying experience by technology stack
 
 ## Screenshots / Demo
 - To be added.
