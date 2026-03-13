@@ -16,6 +16,73 @@ FastAPI • Python • PostgreSQL • SQLAlchemy • Alembic • pytest • Dock
 * Environment isolation (separate dev and test databases)
 * Automated test suite with pytest
 
+
+## Example API Endpoints
+
+### <u>POST - /jobs (create job)</u>
+
+<details>
+
+###### Request Body
+```
+{
+  "company": "string",
+  "title": "string",
+  "location": "string",
+  "start_date": "2026-03-13",
+  "end_date": "2026-03-13",
+  "summary": "string",
+  "notes": "string"
+}
+```
+###### Successful Response
+```
+{
+  "company": "string",
+  "title": "string",
+  "location": "string",
+  "start_date": "2026-03-13",
+  "end_date": "2026-03-13",
+  "summary": "string",
+  "notes": "string",
+  "id": 0
+}
+```
+</details>
+
+### <u>GET - /jobs (list jobs)</u>
+
+<details>
+
+###### Request queries
+```
+GET /jobs?q=pyth
+GET /jobs?skill=python
+GET /jobs?skill_id=34
+```
+###### Successful Response
+```
+[
+  {
+    "company": "string",
+    "title": "string",
+    "location": "string",
+    "start_date": "2026-03-13",
+    "end_date": "2026-03-13",
+    "summary": "string",
+    "notes": "string",
+    "id": 0
+  }
+]
+```
+</details>
+
+
+### <u>POST ---- /skills</u>
+### <u>GET /skills</u>
+### <u>POST /jobs/{job_id}/skills - Attach skill to job</u>
+
+
 ## Engineering Practices Demonstrated
 
 * Clean API architecture (routing, schema, persistence layers)
