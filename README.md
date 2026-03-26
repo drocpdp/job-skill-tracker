@@ -78,10 +78,65 @@ GET /jobs?skill_id=34
 </details>
 
 
-### <u>POST ---- /skills</u>
+### <u>POST - /skills</u>
+
+<details>
+
+###### Request Body
+```
+{
+  "name": "string",
+  "category": "string",
+  "notes": "string"
+}
+```
+
+###### Successful Response
+```
+{
+  "name": "string",
+  "category": "string",
+  "notes": "string",
+  "id": 0
+}
+```
+</details>
+
 ### <u>GET /skills</u>
 ### <u>POST /jobs/{job_id}/skills - Attach skill to job</u>
 
+<details>
+
+* Creates a JobSkill link if it doesn't exist.
+* Returns 409 if the link already exists.
+
+###### Request Body
+```
+{
+  "skill_id": 0,
+  "skill": {
+    "name": "string",
+    "category": "string",
+    "notes": "string"
+  },
+  "how_used": "string"
+}
+```
+
+###### Successful Response
+```
+{
+  "skill": {
+    "name": "string",
+    "category": "string",
+    "notes": "string",
+    "id": 0
+  },
+  "how_used": "string"
+}
+```
+
+</details>
 
 ## Engineering Practices Demonstrated
 
