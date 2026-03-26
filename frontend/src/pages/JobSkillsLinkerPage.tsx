@@ -381,7 +381,7 @@ export default function JobSkillsLinkerPage() {
                         {x.skill.category ?? "—"}
                       </div>
                       {!!x.skill.notes?.trim() && (
-                        <div className="mt-1 text-[11px] text-slate-400 truncate">
+                        <div className="mt-1 text-[11px] text-slate-400">
                           {x.skill.notes.trim()}
                         </div>
                       )}
